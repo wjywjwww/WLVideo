@@ -8,7 +8,7 @@
 
 import UIKit
 
-public enum CameraType {
+public enum WLCameraType {
     case video
     case image
 }
@@ -16,9 +16,9 @@ public enum CameraType {
 open class WLCameraController: UIViewController {
     
     var url: String?
-    var type: CameraType?
+    public var type: WLCameraType = .image
     
-    public var completeBlock: (String, CameraType) -> () = {_,_  in }
+    public var completeBlock: (String, WLCameraType) -> () = {_,_  in }
     
     let previewImageView = UIImageView()
     var videoPlayer: WLVideoPlayer!
@@ -68,7 +68,7 @@ open class WLCameraController: UIViewController {
         previewImageView.isHidden = true
         cameraContentView.addSubview(previewImageView)
         
-        controlView = WLCameraControl.init(frame: CGRect(x: 0, y: cameraContentView.height - 150, width: self.view.width, height: 150))
+        controlView = WLCameraControl(frame: CGRect(x: 0, y: cameraContentView.height - 150, width: self.view.width, height: 150),type:self.type)
         controlView.delegate = self
         cameraContentView.addSubview(controlView)
     }
@@ -92,7 +92,7 @@ extension WLCameraController: WLCameraControlDelegate {
     
     func cameraControlDidComplete() {
         dismiss(animated: true) {
-            self.completeBlock(self.url!, self.type!)
+            self.completeBlock(self.url!, self.type)
         }
     }
     
@@ -100,7 +100,6 @@ extension WLCameraController: WLCameraControlDelegate {
         manager.pickImage { [weak self] (imageUrl) in
             guard let `self` = self else { return }
             DispatchQueue.main.async {
-                self.type = .image
                 self.url = imageUrl
                 self.previewImageView.image = UIImage.init(contentsOfFile: imageUrl)
                 self.previewImageView.isHidden = false
@@ -118,7 +117,6 @@ extension WLCameraController: WLCameraControlDelegate {
         manager.endRecordingVideo { [weak self] (videoUrl) in
             guard let `self` = self else { return }
             let url = URL.init(fileURLWithPath: videoUrl)
-            self.type = .video
             self.url = videoUrl
             self.videoPlayer.isHidden = false
             self.videoPlayer.videoUrl = url
@@ -148,3 +146,4 @@ extension WLCameraController: WLCameraControlDelegate {
     }
     
 }
+

@@ -27,7 +27,7 @@ protocol WLCameraControlDelegate: class {
 class WLCameraControl: UIView {
     
     weak open var delegate: WLCameraControlDelegate?
-    
+    var type:WLCameraType = .image
     let videoLength: Double = 10
     var recordTime: Double = 0
     
@@ -41,8 +41,9 @@ class WLCameraControl: UIView {
     
     var timer: Timer?
     
-    override init(frame: CGRect) {
+    init(frame: CGRect,type:WLCameraType) {
         super.init(frame: frame)
+        self.type = type
         
         setupCameraButton()
         
@@ -103,7 +104,6 @@ class WLCameraControl: UIView {
         cameraButton.layer.addSublayer(gradientLayer)
         
         cameraButton.addGestureRecognizer(UITapGestureRecognizer(target: self, action: #selector(tapGesture)))
-        cameraButton.addGestureRecognizer(UILongPressGestureRecognizer(target: self, action: #selector(longPressGesture(_:))))
     }
     
     @objc func longPressGesture(_ res: UIGestureRecognizer) {
@@ -125,10 +125,19 @@ class WLCameraControl: UIView {
     
     @objc func tapGesture() {
         guard let delegate = delegate else { return }
-        delegate.cameraControlDidTakePhoto()
-        cameraButton.isHidden = true
-        changeCameraButton.isHidden = true
-        exitButton.isHidden = true
+        if self.type == .image {
+            delegate.cameraControlDidTakePhoto()
+            cameraButton.isHidden = true
+            changeCameraButton.isHidden = true
+            exitButton.isHidden = true
+        }else{
+            if self.timer != nil {
+                self.longPressEnd()
+            }else{
+                self.longPressBegin()
+            }
+        }
+        
     }
     
     func longPressBegin() {
@@ -216,3 +225,4 @@ class WLCameraControl: UIView {
     }
     
 }
+
