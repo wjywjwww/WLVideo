@@ -59,7 +59,7 @@ open class WLVideoEditor: NSObject {
         rotatoTo(avAssetVideoTrack.preferredTransform)
     }
     
-    public func addWaterMark(image: UIImage) {
+    public func addWaterMark(markString: String) {
         let videoSize = videoComposition.renderSize
         
         let videoLayer = CALayer()
@@ -70,9 +70,16 @@ open class WLVideoEditor: NSObject {
         parentLayer.frame = videoLayer.bounds
         parentLayer.addSublayer(videoLayer)
         
-        let imageView = UIImageView(frame: CGRect(x: 30, y: videoSize.height - 150, width: 270, height: 120))
-        imageView.image = image 
-        parentLayer.addSublayer(imageView.layer)
+        let textLayer = CATextLayer()
+        textLayer.foregroundColor = UIColor.red.cgColor
+        textLayer.string = markString
+        textLayer.fontSize = 15
+        textLayer.alignmentMode = CATextLayerAlignmentMode(rawValue: "center")
+        textLayer.position = CGPoint(x: videoSize.width / 2, y: videoSize.height / 2)
+        textLayer.bounds = CGRect(x: 0, y: 0, width: videoSize.width, height: videoSize.height)
+        textLayer.contentsScale = 3
+        textLayer.displayIfNeeded()
+        parentLayer.addSublayer(textLayer)
         
         videoComposition.animationTool = .init(postProcessingAsVideoLayer: videoLayer, in: parentLayer)
     }
