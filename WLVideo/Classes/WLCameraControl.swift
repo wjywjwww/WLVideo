@@ -47,25 +47,27 @@ class WLCameraControl: UIView {
         
         setupCameraButton()
         
-        retakeButton.frame = cameraButton.frame
+        retakeButton.center = cameraButton.center
+        retakeButton.frame.size = CGSize(width: 56, height: 56)
         retakeButton.isHidden = true
         retakeButton.setBackgroundImage(WLBundleHelper.imageNamed("icon_return"), for: .normal)
         retakeButton.addTarget(self, action: #selector(retakeButtonClick), for: .touchUpInside)
         self.addSubview(retakeButton)
         
-        takeButton.frame = cameraButton.frame
+        takeButton.center = cameraButton.center
+        takeButton.frame.size = CGSize(width: 56, height: 56)
         takeButton.isHidden = true
         takeButton.setBackgroundImage(WLBundleHelper.imageNamed("icon_finish"), for: .normal)
         takeButton.addTarget(self, action: #selector(takeButtonClick), for: .touchUpInside)
         self.addSubview(takeButton)
         
         changeCameraButton.setImage(WLBundleHelper.imageNamed("change_camera"), for: .normal)
-        changeCameraButton.frame = CGRect(x: 50, y: self.height * 0.5 - 20, width: 40, height: 40)
+        changeCameraButton.frame = CGRect(x: self.width - 50 - 56, y: self.height * 0.5 - 28, width: 56, height: 56)
         changeCameraButton.addTarget(self, action: #selector(changeCameraButtonClick), for: .touchUpInside)
         self.addSubview(changeCameraButton)
         
         exitButton.setImage(WLBundleHelper.imageNamed("arrow_down"), for: .normal)
-        exitButton.frame = CGRect(x: self.width - 50 - 40, y: self.height * 0.5 - 20, width: 40, height: 40)
+        exitButton.frame = CGRect(x: 50, y: self.height * 0.5 - 28, width: 56, height: 56)
         exitButton.addTarget(self, action: #selector(exitButtonClick), for: .touchUpInside)
         self.addSubview(exitButton)
     }
@@ -172,6 +174,8 @@ class WLCameraControl: UIView {
     func showCompleteAnimation() {
         self.retakeButton.isHidden = false
         self.takeButton.isHidden = false
+        retakeButton.center = cameraButton.center
+        takeButton.center = cameraButton.center
         UIView.animate(withDuration: 0.3, animations: {
             self.retakeButton.x = 50
             self.takeButton.x = self.width - self.takeButton.width - 50
@@ -184,8 +188,8 @@ class WLCameraControl: UIView {
         exitButton.isHidden = false
         retakeButton.isHidden = true
         takeButton.isHidden = true
-        retakeButton.frame = cameraButton.frame
-        takeButton.frame = cameraButton.frame
+        retakeButton.center = cameraButton.center
+        takeButton.center = cameraButton.center
         recordTime = 0
         
         guard let delegate = delegate else { return }
