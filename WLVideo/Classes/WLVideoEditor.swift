@@ -59,28 +59,41 @@ open class WLVideoEditor: NSObject {
         rotatoTo(avAssetVideoTrack.preferredTransform)
     }
     
-    public func addWaterMark(markString: String) {
+    public func addWaterMark(with waterImg: UIImage,localString:String,personTimeString:String) {
         let videoSize = videoComposition.renderSize
         
-        let videoLayer = CALayer()
-        videoLayer.frame = CGRect(x: 0, y: 0, width: videoSize.width, height: videoSize.height)
+        let subtitle1Text = CATextLayer()
+        subtitle1Text.fontSize = 15
+        subtitle1Text.string = localString
+        subtitle1Text.alignmentMode = .left
+        let subtitle1TextSize = localString.wlCalculateStringSize(CGSize(width: videoSize.width, height: videoSize.height), font: UIFont.systemFont(ofSize: 15))
+        subtitle1Text.frame = CGRect(x: 35, y: 50, width: subtitle1TextSize.width + 10, height: subtitle1TextSize.height + 5)
+        
+        
+        let subtitle2Text = CATextLayer()
+        subtitle2Text.fontSize = 15
+        subtitle2Text.string = personTimeString
+        subtitle2Text.alignmentMode = .left
+        let subtitle2TextSize = personTimeString.wlCalculateStringSize(CGSize(width: videoSize.width, height: videoSize.height), font: UIFont.systemFont(ofSize: 15))
+        subtitle2Text.frame = CGRect(x: 15, y: 31, width: subtitle2TextSize.width + 10, height: subtitle2TextSize.height + 5)
+        
+        let imageLayer = CALayer()
+        imageLayer.contents = waterImg.cgImage
+        imageLayer.bounds = CGRect(x: 0, y: 0, width: 16, height: 16)
+        imageLayer.position = CGPoint(x: 23, y: 63)
+        
+        let overlayLayer = CALayer()
+        overlayLayer.addSublayer(subtitle1Text)
+        overlayLayer.addSublayer(subtitle2Text)
+        overlayLayer.addSublayer(imageLayer)
+        overlayLayer.frame = CGRect(x: 0, y: 0, width: videoSize.width, height: videoSize.height)
         
         let parentLayer = CALayer()
-        parentLayer.backgroundColor = UIColor.clear.cgColor
-        parentLayer.frame = videoLayer.bounds
+        parentLayer.frame = CGRect(x: 0, y: 0, width: videoSize.width, height: videoSize.height)
+        let videoLayer = CALayer()
+        videoLayer.frame = CGRect(x: 0, y: 0, width: videoSize.width, height: videoSize.height)
         parentLayer.addSublayer(videoLayer)
-        
-        let textLayer = CATextLayer()
-        textLayer.foregroundColor = UIColor.red.cgColor
-        textLayer.string = markString
-        textLayer.fontSize = 15
-        textLayer.alignmentMode = CATextLayerAlignmentMode(rawValue: "center")
-        textLayer.position = CGPoint(x: videoSize.width / 2, y: videoSize.height / 2)
-        textLayer.bounds = CGRect(x: 0, y: 0, width: videoSize.width, height: videoSize.height)
-        textLayer.contentsScale = 3
-        textLayer.displayIfNeeded()
-        parentLayer.addSublayer(textLayer)
-        
+        parentLayer.addSublayer(overlayLayer)
         videoComposition.animationTool = .init(postProcessingAsVideoLayer: videoLayer, in: parentLayer)
     }
     
@@ -180,3 +193,13 @@ open class WLVideoEditor: NSObject {
     }
     
 }
+extension String {
+    // 计算字符串的宽度，高度
+    public func wlCalculateStringSize(_ size: CGSize,font: UIFont) ->CGSize {
+        let attributes = [NSAttributedString.Key.font:font]
+        let option = NSStringDrawingOptions.usesLineFragmentOrigin
+        let rect:CGRect = self.boundingRect(with:CGSize(width: size.width, height: size.height) , options: option, attributes: attributes, context: nil)
+        return rect.size
+    }
+}
+
