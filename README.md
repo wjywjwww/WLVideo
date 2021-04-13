@@ -30,10 +30,10 @@ vc.completeBlock = { url, type in
 present(vc, animated: true, completion: nil)
 ```
 
-### WLVideoEditor
-WLVideoEditor是封装的一个添加视频水印，更改视频背景音乐的类。
+### WLVideoImageEditor
+WLVideoImageEditor是封装的一个添加视频水印，更改视频背景音乐的类。
 ```swift
-let videoEditer = WLVideoEditor.init(videoUrl: videoUrl)
+let videoEditer = WLVideoImageEditor.init(videoUrl: videoUrl)
 // 添加水印图片
 videoEditer.addWaterMark(image: UIImage.init(named: "bilibili")!)
 // 替换背景音乐

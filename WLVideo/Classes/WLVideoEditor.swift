@@ -1,5 +1,5 @@
 //
-//  WLVideoEditor.swift
+//  WLVideoImageEditor.swift
 //  WLVideo
 //
 //  Created by Mr.wang on 2018/12/18.
@@ -8,18 +8,21 @@
 
 import AVKit
 
-open class WLVideoEditor: NSObject {
-    
+open class WLVideoImageEditor: NSObject {
+    public enum EditType {
+        case image
+        case video
+    }
     typealias ExportProgress = (Double) -> ()
     
     var avAsset: AVAsset!
-    
+    var imageUrl:String!
     let videoComposition = AVMutableVideoComposition()
     let composition = AVMutableComposition()
-    
+    var editType:EditType = .image
     var videoAssetTrack: AVAssetTrack?
     var audioAssetTrack: AVAssetTrack?
-    
+    var resultImage:UIImage?
     var videoTrack: AVMutableCompositionTrack?
     var audioTrack: AVMutableCompositionTrack?
     
@@ -28,38 +31,65 @@ open class WLVideoEditor: NSObject {
     
     var exportProgressBlock: ExportProgress?
     var timer: Timer?
-    
-    public init(videoUrl: URL) {
+    public init(editType:EditType,fileUrl: String) {
         super.init()
         
-        avAsset = AVAsset(url: videoUrl)
-        duration = avAsset.duration
-        
-        guard let avAssetVideoTrack = avAsset.tracks(withMediaType: .video).first,
-            let avAssetAudioTrack = avAsset.tracks(withMediaType: .audio).first else {
-                return
+        if self.editType == .image {
+            self.editType = editType
+            self.imageUrl = fileUrl
+        }else{
+            avAsset = AVAsset(url: URL(fileURLWithPath: fileUrl))
+            duration = avAsset.duration
+            
+            guard let avAssetVideoTrack = avAsset.tracks(withMediaType: .video).first,
+                let avAssetAudioTrack = avAsset.tracks(withMediaType: .audio).first else {
+                    return
+            }
+            videoAssetTrack = avAssetVideoTrack
+            audioAssetTrack = avAssetAudioTrack
+            naturalSize = avAssetVideoTrack.naturalSize
+            
+            videoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
+            try? videoTrack?.insertTimeRange(CMTimeRangeMake(start: .zero, duration: duration),
+                                             of: avAssetVideoTrack,
+                                             at: .zero)
+            
+            audioTrack = composition.addMutableTrack(withMediaType: .audio,
+                                                              preferredTrackID: kCMPersistentTrackID_Invalid)
+            try? audioTrack?.insertTimeRange(CMTimeRangeMake(start: .zero, duration: duration),
+                                             of: avAssetAudioTrack,
+                                             at: .zero)
+            
+            videoComposition.renderSize = naturalSize
+            videoComposition.frameDuration = CMTime.init(value: 1, timescale: 30)
+            rotatoTo(avAssetVideoTrack.preferredTransform)
         }
-        videoAssetTrack = avAssetVideoTrack
-        audioAssetTrack = avAssetAudioTrack
-        naturalSize = avAssetVideoTrack.naturalSize
-        
-        videoTrack = composition.addMutableTrack(withMediaType: .video, preferredTrackID: kCMPersistentTrackID_Invalid)
-        try? videoTrack?.insertTimeRange(CMTimeRangeMake(start: .zero, duration: duration),
-                                         of: avAssetVideoTrack,
-                                         at: .zero)
-        
-        audioTrack = composition.addMutableTrack(withMediaType: .audio,
-                                                          preferredTrackID: kCMPersistentTrackID_Invalid)
-        try? audioTrack?.insertTimeRange(CMTimeRangeMake(start: .zero, duration: duration),
-                                         of: avAssetAudioTrack,
-                                         at: .zero)
-        
-        videoComposition.renderSize = naturalSize
-        videoComposition.frameDuration = CMTime.init(value: 1, timescale: 30)
-        rotatoTo(avAssetVideoTrack.preferredTransform)
     }
     
-    public func addWaterMark(with waterImg: UIImage,localString:String,personTimeString:String) {
+    public func imageAddWaterMark(with waterImg: UIImage,localString:String,personTimeString:String) {
+        guard let bgImage = UIImage(contentsOfFile: self.imageUrl) else{
+            return
+        }
+        
+        let imageSize = bgImage.size
+        UIGraphicsBeginImageContextWithOptions(imageSize, false, 0.0)
+        bgImage.draw(in: CGRect(x: 0, y: 0, width: imageSize.width, height: imageSize.height))
+        waterImg.draw(in: CGRect(x: 15, y: imageSize.height - 95, width: 32, height: 32))
+
+        let subtitle1Text:NSString = localString as NSString
+        let subtitle1Att:[NSAttributedString.Key : Any] = [NSAttributedString.Key.font:UIFont.systemFont(ofSize: 30),NSAttributedString.Key.foregroundColor:UIColor.white]
+        subtitle1Text.draw(at: CGPoint(x: 45, y: imageSize.height - 95), withAttributes: subtitle1Att)
+        
+        let subtitle2Text:NSString = personTimeString as NSString
+        let subtitle2Att:[NSAttributedString.Key : Any] = [NSAttributedString.Key.font:UIFont.systemFont(ofSize: 30),NSAttributedString.Key.foregroundColor:UIColor.white]
+        subtitle2Text.draw(at: CGPoint(x: 15, y: imageSize.height - 55), withAttributes: subtitle2Att)
+        
+        let result = UIGraphicsGetImageFromCurrentImageContext()
+        UIGraphicsEndImageContext()
+        self.resultImage = result
+    }
+    
+    public func videoAddWaterMark(with waterImg: UIImage,localString:String,personTimeString:String) {
         let videoSize = videoComposition.renderSize
         
         let subtitle1Text = CATextLayer()
@@ -97,6 +127,14 @@ open class WLVideoEditor: NSObject {
         videoComposition.animationTool = .init(postProcessingAsVideoLayer: videoLayer, in: parentLayer)
     }
     
+    public func addWaterMark(with waterImg: UIImage,localString:String,personTimeString:String) {
+        if self.editType == .image {
+            self.imageAddWaterMark(with: waterImg, localString: localString, personTimeString: personTimeString)
+        }else{
+            self.videoAddWaterMark(with: waterImg, localString: localString, personTimeString: personTimeString)
+        }
+    }
+    
     public func addAudio(audioUrl: String) {
         composition.tracks(withMediaType: .audio).forEach { (track) in
             composition.removeTrack(track)
@@ -126,6 +164,19 @@ open class WLVideoEditor: NSObject {
         
         videoComposition.renderSize = videoSize
         videoComposition.instructions = [instruction]
+    }
+    
+    public func imageExport(completeHandler: @escaping (String,Bool) -> ()) {
+        do {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "yyyyMMddhhmmssFFF"
+            let timeStr = formatter.string(from: Date())
+            let filePath = (NSHomeDirectory() as NSString).appendingPathComponent("/tmp/\(timeStr).png")
+            try self.resultImage?.pngData()?.write(to: URL(fileURLWithPath: filePath))
+            completeHandler(filePath,true)
+        } catch  {
+            completeHandler("图片保存失败",false)
+        }
     }
     
     public func export(progress: @escaping ((Double) -> ()) ,completeHandler: @escaping (String) -> ()) {

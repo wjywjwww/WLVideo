@@ -10,6 +10,7 @@ import UIKit
 import WLVideo
 
 class ViewController: UIViewController {
+    @IBOutlet weak var imageView: UIImageView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -27,33 +28,26 @@ class ViewController: UIViewController {
 
     @IBAction func buttonClick(_ sender: Any) {
         let vc = WLCameraController()
-        vc.type = .video
+        vc.type = .image
         vc.modalPresentationStyle = .fullScreen
         vc.completeBlock = { url, type in
             if type == .video {
-                let videoEditer = WLVideoEditor.init(videoUrl: URL.init(fileURLWithPath: url))
-                videoEditer.addWaterMark(markString: "上海市浦东新区政立路485号")
-                XCVideoEditManager.default()?.waterText = "上海市浦东新区政立路485号"
-                XCVideoEditManager.default()?.startEditVideo(URL(fileURLWithPath: url), progress: { (_) in
-                    
-                }, success: { (result) in
-                    DispatchQueue.main.async {
-                        let player = WLVideoPlayer(frame: self.view.bounds)
-                        player.videoUrl = URL.init(fileURLWithPath: result ?? "")
-                        self.view.addSubview(player)
-                        player.play()
-                    }
-                }, failure: { (error) in
-                    
+                let videoEditer = WLVideoImageEditor(editType: .video, fileUrl: url)
+                videoEditer.addWaterMark(with: UIImage(named: "sg_pa_water_local")!, localString: "上海中环 金环大厦", personTimeString: "吴加永 2020-11-11 22:22:22")
+                videoEditer.assetReaderExport(completeHandler: { url in
+                    let player = WLVideoPlayer(frame: self.view.bounds)
+                    player.videoUrl = URL.init(fileURLWithPath: url)
+                    self.view.addSubview(player)
+                    player.play()
                 })
-//                videoEditer.assetReaderExport(completeHandler: { url in
-//                    let player = WLVideoPlayer(frame: self.view.bounds)
-//                    player.videoUrl = URL.init(fileURLWithPath: url)
-//                    self.view.addSubview(player)
-//                    player.play()
-//                })
+            }else{
+                let videoEditer = WLVideoImageEditor(editType: .image, fileUrl: url)
+                videoEditer.addWaterMark(with: UIImage(named: "sg_pa_water_local")!, localString: "上海中环 金环大厦", personTimeString: "吴加永 2020-11-11 22:22:22")
+                videoEditer.imageExport { (fileUrl, result) in
+                    self.imageView.image = UIImage(contentsOfFile: fileUrl)
+                }
             }
-               }
+        }
         self.present(vc, animated: true, completion: nil)
     }
     
