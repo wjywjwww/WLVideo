@@ -31,11 +31,11 @@ open class WLVideoImageEditor: NSObject {
     
     var exportProgressBlock: ExportProgress?
     var timer: Timer?
+    
     public init(editType:EditType,fileUrl: String) {
         super.init()
-        
-        if self.editType == .image {
-            self.editType = editType
+        self.editType = editType
+        if editType == .image {
             self.imageUrl = fileUrl
         }else{
             avAsset = AVAsset(url: URL(fileURLWithPath: fileUrl))
