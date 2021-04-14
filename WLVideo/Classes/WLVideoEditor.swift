@@ -171,8 +171,8 @@ open class WLVideoImageEditor: NSObject {
             let formatter = DateFormatter()
             formatter.dateFormat = "yyyyMMddhhmmssFFF"
             let timeStr = formatter.string(from: Date())
-            let filePath = (NSHomeDirectory() as NSString).appendingPathComponent("/tmp/\(timeStr).png")
-            try self.resultImage?.pngData()?.write(to: URL(fileURLWithPath: filePath))
+            let filePath = (NSHomeDirectory() as NSString).appendingPathComponent("/tmp/\(timeStr).jpg")
+            try self.resultImage?.jpegData(compressionQuality: 0.5)?.write(to: URL(fileURLWithPath: filePath))
             completeHandler(filePath,true)
         } catch  {
             completeHandler("图片保存失败",false)

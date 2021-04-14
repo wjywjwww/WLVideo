@@ -28,7 +28,7 @@ class ViewController: UIViewController {
 
     @IBAction func buttonClick(_ sender: Any) {
         let vc = WLCameraController()
-        vc.type = .video
+        vc.type = .image
         vc.modalPresentationStyle = .fullScreen
         vc.completeBlock = { url, type in
             if type == .video {

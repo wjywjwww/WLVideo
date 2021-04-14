@@ -1,7 +1,7 @@
 
 Pod::Spec.new do |s|
   s.name             = 'WLVideo'
-  s.version          = '1.0.4'
+  s.version          = '1.0.5'
   s.summary          = 'A short description of WLVideo.'
 
   s.homepage         = 'https://github.com/wjywjwww/WLVideo'
