@@ -191,7 +191,7 @@ class WLCameraManager: NSObject {
         let formate = DateFormatter()
         formate.dateFormat = "yyyyMMddHHmmss"
         let fileName = formate.string(from: Date()) + "." + type
-        let path = NSSearchPathForDirectoriesInDomains(.documentDirectory, .userDomainMask, true).first
+        let path = NSSearchPathForDirectoriesInDomains(.cachesDirectory, .userDomainMask, true).first
         let filePath = path! + "/" + fileName
         return filePath
     }
